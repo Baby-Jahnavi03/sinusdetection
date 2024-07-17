@@ -1,0 +1,59 @@
+import telebot
+import cv2
+import numpy as np
+
+# Replace 'YOUR_TELEGRAM_BOT_TOKEN' with your own Telegram bot token
+bot = telebot.TeleBot('6295692669:AAGuo-pdnShkB2AijhVikasr3gkahrhTXtE')
+
+# Handle '/start' command
+@bot.message_handler(commands=['start'])
+def send_welcome(message):
+    bot.reply_to(message, "Welcome to the Sinus Detection Bot! Please send me an image.")
+
+# Handle image messages
+@bot.message_handler(content_types=['photo'])
+def handle_image(message):
+    # Get the photo ID
+    photo_id = message.photo[-1].file_id
+
+    # Download the photo
+    file_info = bot.get_file(photo_id)
+    downloaded_file = bot.download_file(file_info.file_path)
+
+    # Save the photo locally
+    image_path = 'image.jpg'
+    with open(image_path, 'wb') as f:
+        f.write(downloaded_file)
+
+    # Perform sinus detection
+    result = detect_sinus(image_path)
+
+    # Send the result back to the user
+    bot.reply_to(message, result)
+
+def detect_sinus(image_path):
+    # Load the image
+    image = cv2.imread(image_path)
+
+    # Perform image processing operations to detect sinus
+    # Replace the following code with your sinus detection algorithm
+
+    # Convert the image to grayscale
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    # Apply thresholding to segment sinus regions
+    _, threshold = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+
+    # Find contours of sinus regions
+    contours, _ = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Count the number of sinus regions
+    num_sinus = len(contours)
+
+    # Generate the result message
+    result = f"The image contains {num_sinus} sinus regions."
+
+    return result
+
+# Start the bot
+bot.polling()
